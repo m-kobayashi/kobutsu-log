@@ -9,7 +9,7 @@ import uploadRouter from './routes/upload';
 
 type Bindings = {
   DB: D1Database;
-  // IMAGES: R2Bucket;
+  IMAGES: R2Bucket;
   FIREBASE_PROJECT_ID: string;
 };
 
@@ -46,8 +46,8 @@ app.route('/api/transactions', transactionsRouter);
 app.use('/api/stats/*', authMiddleware);
 app.route('/api/stats', statsRouter);
 
-// /api/upload/* - 画像アップロード
-app.use('/api/upload/*', authMiddleware);
+// /api/upload/* - 画像アップロード（画像取得は認証不要、アップロードのみ認証必須）
+app.use('/api/upload/image', authMiddleware);
 app.route('/api/upload', uploadRouter);
 
 export default app;
