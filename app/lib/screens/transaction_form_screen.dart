@@ -10,7 +10,8 @@ import 'package:kobutsu_log/config/constants.dart';
 import 'package:kobutsu_log/utils/validators.dart';
 import 'package:kobutsu_log/utils/formatters.dart';
 import 'package:kobutsu_log/widgets/loading_overlay.dart';
-import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb, Uint8List;
+import 'dart:io' if (dart.library.html) 'dart:html' as platform;
 
 /// 取引登録・編集画面
 class TransactionFormScreen extends ConsumerStatefulWidget {
@@ -40,7 +41,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
   String? _itemCategory;
   DateTime _transactionDate = DateTime.now();
   String _idVerificationType = 'drivers_license';
-  File? _imageFile;
+  XFile? _imageFile;
   String? _photoUrl;
   bool _isLoading = false;
   bool _isEditing = false;
@@ -99,7 +100,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
 
     if (pickedFile != null) {
       setState(() {
-        _imageFile = File(pickedFile.path);
+        _imageFile = pickedFile;
       });
     }
   }
@@ -465,11 +466,22 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                     ClipRRect(
                       borderRadius: BorderRadius.circular(8),
                       child: _imageFile != null
-                          ? Image.file(
-                              _imageFile!,
-                              height: 200,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
+                          ? FutureBuilder<Uint8List>(
+                              future: _imageFile!.readAsBytes(),
+                              builder: (context, snapshot) {
+                                if (snapshot.hasData) {
+                                  return Image.memory(
+                                    snapshot.data!,
+                                    height: 200,
+                                    width: double.infinity,
+                                    fit: BoxFit.cover,
+                                  );
+                                }
+                                return const SizedBox(
+                                  height: 200,
+                                  child: Center(child: CircularProgressIndicator()),
+                                );
+                              },
                             )
                           : Image.network(
                               _photoUrl!,
