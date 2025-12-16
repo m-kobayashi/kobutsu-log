@@ -1,10 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart' as firebase;
-import 'package:google_sign_in/google_sign_in.dart';
+// import 'package:google_sign_in/google_sign_in.dart';
+// import 'package:flutter/foundation.dart' show kIsWeb;
 
 /// 認証サービス
 class AuthService {
   final firebase.FirebaseAuth _auth = firebase.FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  // late final GoogleSignIn? _googleSignIn = kIsWeb ? null : GoogleSignIn();
 
   /// 現在のFirebaseユーザー
   firebase.User? get currentUser => _auth.currentUser;
@@ -50,10 +51,19 @@ class AuthService {
   }
 
   /// Googleアカウントでログイン
+  /// 注: MVP段階では一時的に無効化しています
   Future<firebase.UserCredential> signInWithGoogle() async {
+    throw Exception('Google Sign In は現在利用できません。メール/パスワードでログインしてください。');
+
+    // TODO: Android/iOS向けに Google Sign In を有効化する場合は以下のコメントを外す
+    /*
+    if (kIsWeb) {
+      throw Exception('Google Sign In は Web プラットフォームでは現在サポートされていません。メール/パスワードでログインしてください。');
+    }
+
     try {
       // Googleサインインフローを開始
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      final GoogleSignInAccount? googleUser = await _googleSignIn!.signIn();
       if (googleUser == null) {
         throw Exception('Googleログインがキャンセルされました');
       }
@@ -72,14 +82,16 @@ class AuthService {
     } catch (e) {
       throw _handleAuthException(e);
     }
+    */
   }
 
   /// ログアウト
   Future<void> signOut() async {
-    await Future.wait([
-      _auth.signOut(),
-      _googleSignIn.signOut(),
-    ]);
+    await _auth.signOut();
+    // TODO: Google Sign In 有効化時は以下も追加
+    // if (!kIsWeb && _googleSignIn != null) {
+    //   await _googleSignIn!.signOut();
+    // }
   }
 
   /// パスワードリセットメールを送信
