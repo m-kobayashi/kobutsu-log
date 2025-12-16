@@ -1,59 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kobutsu_log/firebase_options.dart';
+import 'package:kobutsu_log/app.dart';
+import 'package:kobutsu_log/services/local_storage.dart';
+import 'package:kobutsu_log/providers/auth_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Firebase初期化
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(const MyApp());
-}
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  // Hive初期化
+  final localStorage = LocalStorageService();
+  await localStorage.init();
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'コブツログ',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.brown),
-        useMaterial3: true,
-      ),
-      home: const MyHomePage(title: 'コブツログ'),
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
-      body: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.inventory_2, size: 64),
-            SizedBox(height: 16),
-            Text('古物台帳管理アプリ'),
-            Text('Firebase 初期化完了'),
-          ],
-        ),
-      ),
-    );
-  }
+  runApp(
+    ProviderScope(
+      overrides: [
+        localStorageServiceProvider.overrideWithValue(localStorage),
+      ],
+      child: const App(),
+    ),
+  );
 }

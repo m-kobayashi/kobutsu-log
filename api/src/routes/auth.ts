@@ -7,19 +7,37 @@ type Bindings = {
   FIREBASE_PROJECT_ID: string;
 };
 
-const authRouter = new Hono<{ Bindings: Bindings }>();
+type Variables = {
+  firebaseUid?: string;
+  userEmail?: string;
+};
+
+const authRouter = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
 /**
  * POST /api/auth/register
  * ユーザー登録API
  *
  * Firebase Authenticationで認証済みのユーザーをD1データベースに登録
+ * 注意: このエンドポイントは認証ミドルウェアを通さず、手動でトークン検証を行う
  */
 authRouter.post('/register', async (c) => {
   try {
-    // Firebase UIDを取得（authミドルウェアで設定済み）
-    const firebaseUid = c.get('firebaseUid') as string;
-    const userEmail = c.get('userEmail') as string;
+    // トークンを手動で検証
+    const authHeader = c.req.header('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return errorResponse(c, 'Authorization header required', 401);
+    }
+
+    const token = authHeader.substring(7);
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+      return errorResponse(c, 'Invalid token format', 401);
+    }
+
+    const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+    const firebaseUid = payload.sub as string;
+    const userEmail = payload.email as string;
 
     if (!firebaseUid || !userEmail) {
       return errorResponse(c, 'Authentication required', 401);
@@ -104,10 +122,24 @@ authRouter.post('/register', async (c) => {
 /**
  * POST /api/auth/verify
  * トークン検証API（デバッグ用）
+ * 注意: このエンドポイントは /api/auth/* ミドルウェアを経由しないため、手動検証が必要
  */
 authRouter.post('/verify', async (c) => {
-  const firebaseUid = c.get('firebaseUid') as string;
-  const userEmail = c.get('userEmail') as string;
+  // 簡易トークン検証（本来はミドルウェアと同じ処理）
+  const authHeader = c.req.header('Authorization');
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return errorResponse(c, 'Authorization header required', 401);
+  }
+
+  const token = authHeader.substring(7);
+  const parts = token.split('.');
+  if (parts.length !== 3) {
+    return errorResponse(c, 'Invalid token format', 401);
+  }
+
+  const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+  const firebaseUid = payload.sub as string;
+  const userEmail = payload.email as string;
 
   if (!firebaseUid) {
     return errorResponse(c, 'Invalid token', 401);

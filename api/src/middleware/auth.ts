@@ -122,6 +122,25 @@ export async function authMiddleware(c: Context, next: Next) {
   c.set('firebaseUid', decodedToken.uid);
   c.set('userEmail', decodedToken.email);
 
+  // DBからユーザー情報を取得してuserIdとuserPlanをセット
+  try {
+    const { results } = await c.env.DB.prepare(
+      'SELECT id, plan FROM users WHERE firebase_uid = ?'
+    ).bind(decodedToken.uid).all();
+
+    if (results && results.length > 0) {
+      const user = results[0] as any;
+      c.set('userId', user.id);
+      c.set('userPlan', user.plan || 'free');
+    } else {
+      // ユーザーが見つからない場合はエラー（登録が必要）
+      return errorResponse(c, 'User not found. Please register first.', 404);
+    }
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    return errorResponse(c, 'Error fetching user information', 500);
+  }
+
   await next();
 }
 
