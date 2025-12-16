@@ -6,12 +6,12 @@ compatibility_date = "2024-01-01"
 [[d1_databases]]
 binding = "DB"
 database_name = "kobutsu-log-db"
-database_id = "<your-database-id>"
+database_id = "5886de01-978b-4fec-bfd9-cf4c2d42b201"
 
-# R2 Storage (if needed)
-# [[r2_buckets]]
-# binding = "IMAGES"
-# bucket_name = "{{BUCKET_NAME}}"
+# R2 Storage
+[[r2_buckets]]
+binding = "IMAGES"
+bucket_name = "kobutsu-log-images"
 
 # Environment Variables
 [vars]

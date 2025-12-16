@@ -3,7 +3,7 @@ class AppConstants {
   // API設定
   static const String apiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://localhost:8787',
+    defaultValue: 'https://kobutsu-log-api.m-kobayashi-v.workers.dev',
   );
 
   // プラン制限
